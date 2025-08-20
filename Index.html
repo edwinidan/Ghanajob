@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ghana Early-Career Tech Opportunity Explorer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: "Warm Neutrals" with soft teal and ochre accents -->
+    <!-- Application Structure Plan: A single-page dashboard design with tab-based navigation to switch between logical sections: a Market Overview dashboard with key stats and charts, an Interactive Job Explorer with dynamic filtering, a Graduate Program Hub for comparing structured programs, and a Strategic Career Guide with actionable advice. This structure was chosen to guide the user from a high-level understanding of the market to specific, actionable opportunities, mirroring a logical job search process and prioritizing ease of navigation and information discovery over the report's linear format. -->
+    <!-- Visualization & Content Choices: 1. Market Overview (Donut Chart): Goal=Compare Proportions, Viz=Chart.js Canvas, Interaction=Hover for details, Justification=Quick visual summary of job types. 2. Location Breakdown (Bar Chart): Goal=Compare Quantities, Viz=Chart.js Canvas, Interaction=Hover, Justification=Highlights Accra's dominance. 3. Job Listings (Interactive Table): Goal=Organize/Filter, Viz=HTML/JS, Interaction=Dropdown filters, Justification=Core user task of finding relevant roles. 4. Grad Program Timeline (Visual Diagram): Goal=Show Sequence, Viz=HTML/CSS, Interaction=Hover for details, Justification=Provides a strategic application planning tool. 5. Strategic Advice (Accordions): Goal=Inform, Viz=HTML/JS, Interaction=Click to expand, Justification=Manages text density. All choices support the user-centric flow of the application. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #4A4A4A;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+                max-height: 400px;
+            }
+        }
+        .nav-button {
+            transition: all 0.3s ease;
+        }
+        .nav-button.active {
+            background-color: #008080;
+            color: #FFFFFF;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+        .job-card {
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        .job-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -30px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #008080;
+            border: 3px solid #FDFBF8;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 md:p-8">
+        
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-[#3A5F5F] mb-2">Ghana Early-Career Tech Opportunity Explorer</h1>
+            <p class="text-md md:text-lg text-gray-600">An interactive dashboard for Q3 2025 based on the Market Analysis and Scouting Report.</p>
+        </header>
+
+        <nav class="flex flex-wrap justify-center gap-2 mb-8">
+            <button data-section="dashboard" class="nav-button active font-semibold py-2 px-4 rounded-full bg-white shadow-sm">📊 Market Dashboard</button>
+            <button data-section="jobs" class="nav-button font-semibold py-2 px-4 rounded-full bg-white shadow-sm">🔍 Job Explorer</button>
+            <button data-section="programs" class="nav-button font-semibold py-2 px-4 rounded-full bg-white shadow-sm">🎓 Graduate Programs</button>
+            <button data-section="strategy" class="nav-button font-semibold py-2 px-4 rounded-full bg-white shadow-sm">🚀 Career Strategy</button>
+        </nav>
+
+        <main>
+            <section id="dashboard" class="space-y-8">
+                <div>
+                    <h2 class="text-2xl font-bold text-center mb-2 text-[#3A5F5F]">Market Landscape at a Glance</h2>
+                    <p class="text-center text-gray-600 max-w-3xl mx-auto">This dashboard provides a high-level overview of the early-career tech job market in Ghana. Use the charts to understand opportunity distribution and click on the key dynamics to reveal expert analysis.</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md cursor-pointer" onclick="toggleDetails('details-accra')">
+                        <h3 class="font-bold text-lg text-[#008080] mb-2">🏙️ The Accra-Centric Tech Hub</h3>
+                        <p class="text-sm">The vast majority of on-site and hybrid roles are concentrated in the Greater Accra Region.</p>
+                        <div id="details-accra" class="hidden mt-4 text-sm text-gray-700 border-t pt-4">
+                            <p>Analysis shows an overwhelming concentration of tech opportunities in Accra and Tema. While regional centers like Kumasi and Takoradi have some presence from national companies, Accra remains the primary physical destination for graduates seeking the widest array of in-person career opportunities.</p>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md cursor-pointer" onclick="toggleDetails('details-remote')">
+                        <h3 class="font-bold text-lg text-[#008080] mb-2">🌍 Rise of Global Remote Employers</h3>
+                        <p class="text-sm">International, remote-first companies are actively recruiting top talent from Ghana.</p>
+                        <div id="details-remote" class="hidden mt-4 text-sm text-gray-700 border-t pt-4">
+                            <p>A strong trend of remote work provides a direct pathway to an international career without relocation. Companies like Canonical offer high-level roles but come with exceptionally high expectations, placing Ghanaian graduates in a competitive global talent pool.</p>
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md cursor-pointer" onclick="toggleDetails('details-tracks')">
+                        <h3 class="font-bold text-lg text-[#008080] mb-2">🛤️ The Two-Track Entry System</h3>
+                        <p class="text-sm">Entry into the tech workforce follows two main paths: direct-hire roles and structured graduate programs.</p>
+                        <div id="details-tracks" class="hidden mt-4 text-sm text-gray-700 border-t pt-4">
+                            <p>Graduates can pursue direct-hire jobs (e.g., IT Support Officer) which often ask for 1-2 years' experience, or target highly competitive Graduate Trainee Programs at major corporations, which are designed to build future leaders from the ground up.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold text-center mb-4 text-[#3A5F5F]">Open Roles by Specialization</h3>
+                        <div class="chart-container">
+                            <canvas id="rolesChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold text-center mb-4 text-[#3A5F5F]">Job Concentration by Location</h3>
+                        <div class="chart-container">
+                            <canvas id="locationsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="jobs" class="hidden">
+                 <div>
+                    <h2 class="text-2xl font-bold text-center mb-2 text-[#3A5F5F]">Interactive Job Explorer</h2>
+                    <p class="text-center text-gray-600 max-w-3xl mx-auto mb-6">Find your next opportunity. Use the filters below to narrow down the list of roles scouted in the last 30 days. Click on any job card to see more details and apply.</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-md mb-6 flex flex-wrap justify-center items-center gap-4">
+                    <div class="flex-grow">
+                        <label for="filter-specialization" class="block text-sm font-medium text-gray-700">Specialization</label>
+                        <select id="filter-specialization" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#008080] focus:border-[#008080] sm:text-sm rounded-md">
+                            <option>All</option>
+                            <option>IT/Support/Infra</option>
+                            <option>Data/ML</option>
+                            <option>Software/Web/Mobile</option>
+                            <option>Specialized (QA/Embedded)</option>
+                        </select>
+                    </div>
+                    <div class="flex-grow">
+                        <label for="filter-location" class="block text-sm font-medium text-gray-700">Location</label>
+                        <select id="filter-location" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#008080] focus:border-[#008080] sm:text-sm rounded-md">
+                            <option>All</option>
+                            <option>Accra</option>
+                            <option>Kumasi</option>
+                            <option>Takoradi</option>
+                            <option>Remote</option>
+                        </select>
+                    </div>
+                     <div class="flex-grow">
+                        <label for="filter-type" class="block text-sm font-medium text-gray-700">Role Type</label>
+                        <select id="filter-type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-[#008080] focus:border-[#008080] sm:text-sm rounded-md">
+                            <option>All</option>
+                            <option>Direct Hire</option>
+                            <option>Internship/NSS</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="job-listings" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                </div>
+            </section>
+
+            <section id="programs" class="hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-center mb-2 text-[#3A5F5F]">Graduate Trainee Program Hub</h2>
+                    <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">Graduate programs are high-value career accelerators. This section provides a comparative analysis of top programs in Ghana to help you plan your applications strategically.</p>
+                </div>
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <div class="lg:w-2/3 bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold text-[#3A5F5F] mb-4">Program Comparison</h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm text-left text-gray-500">
+                                <thead class="text-xs text-[#008080] uppercase bg-gray-50">
+                                    <tr>
+                                        <th scope="col" class="py-3 px-6">Program</th>
+                                        <th scope="col" class="py-3 px-6">Sector</th>
+                                        <th scope="col" class="py-3 px-6">Eligibility Highlight</th>
+                                        <th scope="col" class="py-3 px-6">Link</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="programs-table">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="lg:w-1/3 bg-white p-6 rounded-xl shadow-md">
+                        <h3 class="text-xl font-bold text-[#3A5F5F] mb-6">Typical Application Timeline</h3>
+                        <div class="relative border-l-2 border-gray-200 ml-4">
+                            <div class="mb-8 ml-8 timeline-item">
+                                <h4 class="font-semibold text-gray-900">Q1 (Jan-Mar)</h4>
+                                <p class="text-sm font-normal text-gray-500">AmaliTech Graduate Trainee Programme</p>
+                            </div>
+                            <div class="mb-8 ml-8 timeline-item">
+                                <h4 class="font-semibold text-gray-900">Q2 (Apr-Jun)</h4>
+                                <p class="text-sm font-normal text-gray-500">Stanbic Bank, Ericsson, Huawei</p>
+                            </div>
+                             <div class="mb-8 ml-8 timeline-item">
+                                <h4 class="font-semibold text-gray-900">Q4 (Oct-Dec)</h4>
+                                <p class="text-sm font-normal text-gray-500">MTN Global Graduate Programme</p>
+                            </div>
+                             <div class="ml-8 timeline-item">
+                                <h4 class="font-semibold text-gray-900">Varies</h4>
+                                <p class="text-sm font-normal text-gray-500">Telecel, Ecobank, GTBank, Fidelity</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="strategy" class="hidden">
+                <div>
+                    <h2 class="text-2xl font-bold text-center mb-2 text-[#3A5F5F]">Strategic Career Guide</h2>
+                    <p class="text-center text-gray-600 max-w-3xl mx-auto mb-8">Equip yourself with market intelligence and a proven application strategy. This guide distills expert recommendations for navigating the Ghanaian tech job market successfully.</p>
+                </div>
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold text-[#3A5F5F] mb-4">Company Hiring Philosophies</h3>
+                        <div class="space-y-4">
+                            <div class="border border-gray-200 rounded-xl">
+                                <button class="w-full text-left p-4 font-semibold" onclick="toggleAccordion('accordion-canonical')">
+                                    Canonical: The Open-Source Powerhouse
+                                </button>
+                                <div id="accordion-canonical" class="hidden p-4 border-t text-sm">
+                                    Canonical operates on a remote-first, global model. They seek candidates with exceptional academic records and a demonstrated passion for the open-source ecosystem (Linux, Kubernetes, Go, Python). A strong public GitHub profile showcasing relevant projects is more valuable than just a good transcript. You are competing with talent from across the EMEA region.
+                                </div>
+                            </div>
+                            <div class="border border-gray-200 rounded-xl">
+                                <button class="w-full text-left p-4 font-semibold" onclick="toggleAccordion('accordion-andela')">
+                                    Andela: The Global Talent Catalyst
+                                </button>
+                                <div id="accordion-andela" class="hidden p-4 border-t text-sm">
+                                    Andela is a career acceleration platform, not a direct employer for graduates. The primary entry point is through the Andela Learning Community (ALC). By completing learning tracks and gaining certifications (e.g., in Kubernetes or Azure), you become a vetted, marketable asset for placement in their global talent marketplace. The strategy is to skill up via ALC first.
+                                </div>
+                            </div>
+                        </div>
+                        <h3 class="text-xl font-bold text-[#3A5F5F] my-4">The "Experience Paradox"</h3>
+                        <p class="text-sm bg-white p-4 rounded-xl shadow-sm">Don't be deterred by "entry-level" roles asking for 2-3 years of experience. If you meet 70-80% of the technical skills, you should still apply. Use your cover letter to build a compelling case for how academic projects, personal projects, and certifications provide an equivalent foundation of practical knowledge.</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold text-[#3A5F5F] mb-4">Essential Skills Matrix</h3>
+                        <div class="bg-white p-4 rounded-xl shadow-sm">
+                            <div class="grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                    <h4 class="font-bold mb-2">Technical Skills</h4>
+                                    <ul class="list-disc list-inside space-y-1">
+                                        <li><span class="font-semibold">Foundational:</span> Linux, SQL, Git</li>
+                                        <li><span class="font-semibold">Languages:</span> Python, Go, JS/TS</li>
+                                        <li><span class="font-semibold">Frameworks:</span> React or Flutter</li>
+                                        <li><span class="font-semibold">Cloud/DevOps:</span> Docker, Kubernetes</li>
+                                        <li><span class="font-semibold">Data:</span> Advanced Excel, Power BI</li>
+                                    </ul>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold mb-2">Soft Skills</h4>
+                                     <ul class="list-disc list-inside space-y-1">
+                                        <li>Problem-Solving</li>
+                                        <li>Analytical Thinking</li>
+                                        <li>Clear Communication</li>
+                                        <li>Learning Agility</li>
+                                        <li>Proactiveness</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const allJobs = [
+            { title: 'Junior / Associate IT Operations Engineer', company: 'Promasidor', location: 'Accra', type: 'Onsite', experience: '1-2 years', skills: 'IT Support, Microsoft 365, Hardware/OS Troubleshooting, Networking', link: 'https://ghcareers.promasidor.com/fmi/webd/quizgh%20web', specialization: 'IT/Support/Infra', roleType: 'Direct Hire' },
+            { title: 'IT Supervisor', company: 'Marriott International', location: 'Accra', type: 'Onsite', experience: '2 years', skills: 'Hardware/Software Troubleshooting, User Support, Network Admin, POS Systems', link: 'https://www.jobberman.com.gh/account/login', specialization: 'IT/Support/Infra', roleType: 'Direct Hire' },
+            { title: 'Associate Linux Support Engineer', company: 'Canonical', location: 'Remote', type: 'Remote', experience: '0-2 years (Graduate)', skills: 'Linux Troubleshooting, Networking fundamentals, Programming fundamentals', link: 'https://www.jobberman.com.gh/account/login', specialization: 'IT/Support/Infra', roleType: 'Direct Hire' },
+            { title: 'Cloud Support Engineer', company: 'Canonical', location: 'Remote', type: 'Remote', experience: '3+ years (exceptional grads)', skills: 'Linux, Virtualization (KVM/OpenStack), Containers (Docker/Kubernetes)', link: 'https://www.jobberman.com.gh/account/login', specialization: 'IT/Support/Infra', roleType: 'Direct Hire' },
+            { title: 'Technical Staff-IT and Electricals', company: 'Confidential', location: 'Accra', type: 'Onsite', experience: '2 years', skills: 'Electrical Systems (UPS), IT Hardware, CCTV, Networking, AutoCAD', link: 'https://www.jobberman.com.gh/listings/technical-staff-r898d4', specialization: 'IT/Support/Infra', roleType: 'Direct Hire' },
+            { title: 'IT Executive', company: 'Automation Ghana', location: 'Accra', type: 'Onsite', experience: 'Not specified', skills: 'Solving complex tech issues, driving IT projects', link: 'https://jobwebghana.com/job/it-executive-at-automation-ghana/', specialization: 'IT/Support/Infra', roleType: 'Direct Hire' },
+            { title: 'I.T Technician', company: 'North East Coastal Industries', location: 'Not Stated', type: 'Onsite', experience: 'Not specified', skills: 'Hardware/Software installation, Network maintenance, User support', link: 'https://jobwebghana.com/job/i-t-technician-at-north-east-coastal-industries/', specialization: 'IT/Support/Infra', roleType: 'Direct Hire' },
+            { title: 'Data Analyst – M&E', company: 'Barry Callebaut Group', location: 'Kumasi', type: 'Onsite', experience: '1-2 years', skills: 'Data quality verification, Database management, M&E support', link: 'https://www.jobberman.com.gh/listings/data-analyst-me-p5k04k', specialization: 'Data/ML', roleType: 'Direct Hire' },
+            { title: 'Data Analyst Intern', company: 'DKT International', location: 'Accra', type: 'Onsite', experience: 'Internship (0 years)', skills: 'Data analysis, Program support', link: 'https://www.careerjet.com.gh/job/8468b8d4f4544866f21226500d072a74', specialization: 'Data/ML', roleType: 'Internship/NSS' },
+            { title: 'Trainee Analyst: National Service', company: 'Bridgewater Africa', location: 'Accra', type: 'Onsite', experience: 'NSS (0 years)', skills: 'Investment Banking interest, Analytical skills', link: 'https://www.careerjet.com.gh/job/10d10b77b7384f507b58866579294e7b', specialization: 'Data/ML', roleType: 'Internship/NSS' },
+            { title: 'Data Analyst (excel & Zoominfo)', company: 'Growth Troops', location: 'Accra', type: 'Onsite', experience: 'Not specified', skills: 'Microsoft Excel, ZoomInfo, Attention to detail', link: 'https://www.jobberman.com.gh/account/login', specialization: 'Data/ML', roleType: 'Direct Hire' },
+            { title: 'Power BI Developer', company: 'AmaliTech', location: 'Accra, Takoradi or Kumasi', type: 'Hybrid', experience: 'Not specified', skills: 'Power BI, Data visualization, Bridging raw data to insights', link: 'https://amalitech.com/jobs-in-ghana/', specialization: 'Data/ML', roleType: 'Direct Hire' },
+            { title: 'Full Stack Web Developer', company: 'Filly Coder', location: 'Accra', type: 'Onsite', experience: 'Not specified', skills: 'Full-stack development, Problem-solving', link: 'https://www.jobberman.com.gh/listings/full-stack-web-developer-xwq65d', specialization: 'Software/Web/Mobile', roleType: 'Direct Hire' },
+            { title: 'Assurance Intern', company: 'EY', location: 'Accra', type: 'Onsite', experience: 'Internship (0 years)', skills: 'Relevant for FinTech', link: 'https://www.jobberman.com.gh/listings/assurance-intern-m8048x', specialization: 'Software/Web/Mobile', roleType: 'Internship/NSS' },
+            { title: 'Software Engineer - Packaging', company: 'Canonical', location: 'Remote', type: 'Remote', experience: 'Graduate level+', skills: 'Linux, Software Packaging, Ubuntu, Go/Python', link: 'https://www.jobberman.com.gh/listings/software-engineer-packaging-optimize-ubuntu-server-k5p5p4', specialization: 'Software/Web/Mobile', roleType: 'Direct Hire' },
+            { title: 'Web Developer', company: 'Canonical', location: 'Remote', type: 'Remote', experience: 'Graduate', skills: 'Typescript, React or Flutter, Linux, REST API design', link: 'https://canonical.com/careers/5150422', specialization: 'Software/Web/Mobile', roleType: 'Direct Hire' },
+            { title: 'Python for Data Engineering', company: 'AmaliTech', location: 'Accra, Takoradi or Kumasi', type: 'Hybrid', experience: 'Not specified', skills: 'Python, Software development, Data pipelines', link: 'https://amalitech.com/jobs-in-ghana/', specialization: 'Software/Web/Mobile', roleType: 'Direct Hire' },
+            { title: 'QA Tester (M/F)', company: 'AFRICASHORE', location: 'Remote', type: 'Remote', experience: 'Not specified', skills: 'Testing strategy, Task execution', link: 'https://www.ghanajob.com/job-tester/qa-tester-m-f-1175620', specialization: 'Specialized (QA/Embedded)', roleType: 'Direct Hire' },
+            { title: 'C++ Developer', company: 'AmaliTech', location: 'Accra, Takoradi, or Kumasi', type: 'Hybrid', experience: 'Requires experience', skills: 'C++, Embedded systems, MCUs, Renesas, CMAKE', link: 'https://amalitech.com/jobs-in-ghana/', specialization: 'Specialized (QA/Embedded)', roleType: 'Direct Hire' },
+        ];
+
+        const graduatePrograms = [
+            { name: 'Graduate Trainee Programme', company: 'AmaliTech', sector: 'Technology', eligibility: 'Post-NSS University Graduate', link: 'https://amalitech.com/graduate-trainee-programme/' },
+            { name: 'Gen-E Graduate Engineer Program', company: 'Ericsson', sector: 'Telecom/Tech', eligibility: '0-1 yrs exp; Degree in CS/Eng/IT', link: 'https://www.movemeback.com/careers/ericsson-ericsson-gen-e-graduate-engineer-program' },
+            { name: "'Beyond Limits' Campus Recruitment", company: 'Huawei', sector: 'Telecom/Tech', eligibility: 'Top 200 grads from 10 select universities', link: 'https://managingghana.com/2024/07/02/huawei-ghana-introduces-beyond-limits-campus-recruitment-program-for-ict-talent/' },
+            { name: 'Global Graduate Development Programme', company: 'MTN', sector: 'Telecom', eligibility: 'Age 20-26; Min. 2:1 Degree', link: 'https://group.mtn.com/careers/graduate-programme/' },
+            { name: 'Graduate Program', company: 'Telecel Ghana', sector: 'Telecom', eligibility: 'Varies; Monitor careers page', link: 'https://telecel.com.gh/explore-telecel/careers/career-opportunities/' },
+            { name: 'Graduate Trainee Program', company: 'Stanbic Bank', sector: 'Banking', eligibility: 'Age 23-25; Post-NSS; Min. 2:1 (GPA 3.0+)', link: 'https://www.researchbunny.com/opportunities/stanbic-ibtc-bank-graduate-trainee-program-ghana' },
+            { name: 'Management Development Programme', company: 'Ecobank', sector: 'Banking', eligibility: 'Master\'s Degree (STEM preferred)', link: 'https://www.careersinafrica.com/role/ecobank-management-development-recruitment-program/' },
+            { name: 'Entry Level Training Scheme', company: 'GTBank', sector: 'Banking', eligibility: 'Post-NSS; Min. 2:2 Degree', link: 'https://www.gtbghana.com/about/careers' },
+            { name: 'Early Careers Programmes', company: 'Fidelity Bank', sector: 'Banking', eligibility: 'Varies; Monitor careers page', link: 'https://www.fidelitybank.com.gh/careers/working-at-fidelity-bank/early-careers' },
+        ];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderJobs(allJobs);
+            renderPrograms(graduatePrograms);
+            setupNavigation();
+            setupFilters();
+            createRolesChart();
+            createLocationsChart();
+        });
+
+        function setupNavigation() {
+            const navButtons = document.querySelectorAll('.nav-button');
+            const sections = document.querySelectorAll('main > section');
+
+            navButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetSection = button.dataset.section;
+
+                    navButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    sections.forEach(section => {
+                        if (section.id === targetSection) {
+                            section.classList.remove('hidden');
+                        } else {
+                            section.classList.add('hidden');
+                        }
+                    });
+                });
+            });
+        }
+        
+        function setupFilters() {
+            const specializationFilter = document.getElementById('filter-specialization');
+            const locationFilter = document.getElementById('filter-location');
+            const typeFilter = document.getElementById('filter-type');
+
+            [specializationFilter, locationFilter, typeFilter].forEach(filter => {
+                filter.addEventListener('change', () => {
+                    const specialization = specializationFilter.value;
+                    const location = locationFilter.value;
+                    const type = typeFilter.value;
+                    
+                    let filteredJobs = allJobs;
+
+                    if (specialization !== 'All') {
+                        filteredJobs = filteredJobs.filter(job => job.specialization === specialization);
+                    }
+                    if (location !== 'All') {
+                        filteredJobs = filteredJobs.filter(job => job.location.includes(location));
+                    }
+                    if (type !== 'All') {
+                        filteredJobs = filteredJobs.filter(job => job.roleType === type);
+                    }
+                    
+                    renderJobs(filteredJobs);
+                });
+            });
+        }
+
+        function renderJobs(jobs) {
+            const container = document.getElementById('job-listings');
+            container.innerHTML = '';
+            if (jobs.length === 0) {
+                container.innerHTML = `<p class="text-center text-gray-500 col-span-full">No jobs match the current filters.</p>`;
+                return;
+            }
+            jobs.forEach(job => {
+                const jobCard = `
+                    <div class="job-card bg-white p-5 rounded-xl shadow-md border border-transparent hover:border-[#008080]">
+                        <h4 class="font-bold text-md text-[#3A5F5F]">${job.title}</h4>
+                        <p class="text-sm font-semibold text-gray-700 mb-2">${job.company}</p>
+                        <div class="flex flex-wrap gap-2 text-xs mb-3">
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">${job.location}</span>
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">${job.type}</span>
+                            <span class="bg-gray-100 text-gray-800 px-2 py-1 rounded-full">${job.experience}</span>
+                        </div>
+                        <p class="text-sm text-gray-600 mb-4"><span class="font-semibold">Key Skills:</span> ${job.skills}</p>
+                        <a href="${job.link}" target="_blank" class="block w-full text-center bg-[#008080] text-white font-bold py-2 px-4 rounded-lg hover:bg-[#006666] transition-colors">Apply Now</a>
+                    </div>
+                `;
+                container.innerHTML += jobCard;
+            });
+        }
+
+        function renderPrograms(programs) {
+            const tbody = document.getElementById('programs-table');
+            tbody.innerHTML = '';
+            programs.forEach(program => {
+                const row = `
+                    <tr class="bg-white border-b">
+                        <th scope="row" class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap">${program.company}</th>
+                        <td class="py-4 px-6">${program.sector}</td>
+                        <td class="py-4 px-6">${program.eligibility}</td>
+                        <td class="py-4 px-6"><a href="${program.link}" target="_blank" class="text-[#008080] hover:underline">Details</a></td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+        
+        function toggleDetails(id) {
+            const element = document.getElementById(id);
+            element.classList.toggle('hidden');
+        }
+
+        function toggleAccordion(id) {
+            const element = document.getElementById(id);
+            element.classList.toggle('hidden');
+        }
+
+        function createRolesChart() {
+            const ctx = document.getElementById('rolesChart').getContext('2d');
+            const specializations = [...new Set(allJobs.map(job => job.specialization))];
+            const counts = specializations.map(spec => allJobs.filter(job => job.specialization === spec).length);
+
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: specializations.map(s => s.replace('Specialized (QA/Embedded)', 'QA/Embedded')),
+                    datasets: [{
+                        label: 'Roles',
+                        data: counts,
+                        backgroundColor: ['#008080', '#F5A623', '#4A90E2', '#BD10E0'],
+                        borderColor: '#FDFBF8',
+                        borderWidth: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed !== null) {
+                                        label += context.parsed + ' roles';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function createLocationsChart() {
+            const ctx = document.getElementById('locationsChart').getContext('2d');
+            const locations = ['Accra', 'Kumasi', 'Takoradi', 'Remote'];
+            const counts = locations.map(loc => allJobs.filter(job => job.location.includes(loc)).length);
+
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: locations,
+                    datasets: [{
+                        label: 'Number of Jobs',
+                        data: counts,
+                        backgroundColor: '#4A90E2',
+                        borderColor: '#3A5F5F',
+                        borderWidth: 1,
+                        borderRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                             grid: {
+                                display: false
+                            }
+                        },
+                        y: {
+                             grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+    </script>
+</body>
+</html>
